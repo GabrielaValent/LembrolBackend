@@ -1,6 +1,9 @@
 using backend_lembrol.Database;
+using backend_lembrol.Service;
+using backend_lembrol.Repository;
 using Microsoft.EntityFrameworkCore;
-
+using Infrastructure.DataAccess;
+using backend_lembrol.DataAccess.Interfaces;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +19,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<DataContext>(
     options => options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
+
+// Add repositories and services
+builder.Services.AddScoped<TagRepository>();
+builder.Services.AddScoped<TagService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 
