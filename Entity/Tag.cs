@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace backend_lembrol.Entity
 {
     [PrimaryKey(nameof(TagId))]
     public class Tag
     {
-        public string TagId {get;set;}
-        public string Name {get;set;}
-        public string Color {get;set;}
+        [Required]
+        public string TagId {get;set;}  = string.Empty;
+        public string Name {get;set;} = string.Empty;
+        public string Color { get; set; } = "#FFFFFFF";
         public int Active {get;set;}
     }
 }
