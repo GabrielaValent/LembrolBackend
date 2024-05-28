@@ -4,12 +4,19 @@ using backend_lembrol.Repository;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.DataAccess;
 using backend_lembrol.DataAccess.Interfaces;
-
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using backend_lembrol.MQTT;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Add MQTT services
+builder.Services.AddSingleton<MqttService>();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -21,13 +28,13 @@ builder.Services.AddDbContext<DataContext>(
 );
 
 // Add repositories and services
-builder.Services.AddScoped<TagRepository>();
+builder.Services.AddScoped<TagRepository>(); // Agora registrado como Scoped
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure o pipeline HTTP.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
