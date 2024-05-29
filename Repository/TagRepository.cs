@@ -3,6 +3,7 @@ using backend_lembrol.Entity;
 using backend_lembrol.Dto;
 using backend_lembrol.Database;
 using backend_lembrol.Utils;
+using backend_lembrol.Exceptions;
 
 
 namespace backend_lembrol.Repository
@@ -44,7 +45,6 @@ namespace backend_lembrol.Repository
 
                 var daysOfWeekDto = daysOfWeek.Select(d => new DaysOfWeekDto
                 {
-                    TagId = d.TagId,
                     Day = d.DayOfWeek,
                     Active = d.Active
                     
@@ -52,7 +52,6 @@ namespace backend_lembrol.Repository
 
                 var specificDatesDto = specificDates.Select(s => new SpecificDatesDto
                 {
-                    TagId = s.TagId,
                     Date = s.SpecificDate,
                     Active = s.Active
                 }).ToList();
@@ -75,21 +74,19 @@ namespace backend_lembrol.Repository
         {
             var tag = await _context.Tags.FindAsync(id);
 
-            if (tag == null) { throw new Exception("TagId not Found"); }
+            if (tag == null) { throw new NotFoundException("TagId not Found"); }
 
             var daysOfWeek = await _context.DaysOfWeek.Where(d => d.TagId == tag.TagId).ToListAsync();
             var specificDates = await _context.SpecificDates.Where(s => s.TagId == tag.TagId).ToListAsync();
 
             var daysOfWeekDto = daysOfWeek.Select(d => new DaysOfWeekDto
             {
-                TagId = d.TagId,
                 Day = d.DayOfWeek,
                 Active = d.Active
             }).ToList();
 
             var specificDatesDto = specificDates.Select(s => new SpecificDatesDto
             {
-                TagId = s.TagId,
                 Date = s.SpecificDate,
                 Active = s.Active
             }).ToList();
@@ -109,7 +106,7 @@ namespace backend_lembrol.Repository
         {
             var oldTag = await _context.Tags.FindAsync(id);
 
-            if (oldTag == null) { throw new Exception("TagId not Found"); }
+            if (oldTag == null) { throw new NotFoundException($"TagId {id} not Found"); }
 
             oldTag.Name = updatedTag.Name;
             oldTag.Active = updatedTag.Active;
@@ -117,6 +114,7 @@ namespace backend_lembrol.Repository
             _context.Tags.Update(oldTag);
 
             List<DaysOfWeek> daysToUpdate = new List<DaysOfWeek>();
+            List<DaysOfWeek> daysToAdd = new List<DaysOfWeek>();
             foreach (var day in updatedTag.DaysOfWeek)
             {
                 ValidationUtils.ValidateIntDayOfWeek(day.Day);
@@ -136,20 +134,22 @@ namespace backend_lembrol.Repository
                         DayOfWeek = day.Day,
                         Active = day.Active
                     };
-                    daysToUpdate.Add(dayEntity);
+                    daysToAdd.Add(dayEntity);
                 }
                 
             }
 
-            var daysToCheck = daysToUpdate.Select(up => up.DayOfWeek).ToList();
+            var daysToCheck = daysToUpdate.Concat(daysToAdd).Select(up => up.DayOfWeek).ToList();
             var oldDaysOfWeek = await _context.DaysOfWeek.Where(d => d.TagId == oldTag.TagId).ToListAsync();
             var daysToRemove = oldDaysOfWeek.Where(od => !daysToCheck.Contains(od.DayOfWeek));
             _context.DaysOfWeek.RemoveRange(daysToRemove);
+            _context.DaysOfWeek.AddRange(daysToAdd);
             _context.DaysOfWeek.UpdateRange(daysToUpdate);
 
             
 
             List<SpecificDates> datesToUpdate = new List<SpecificDates>();
+            List<SpecificDates> datesToAdd = new List<SpecificDates>();
             foreach (var date in updatedTag.SpecificDates)
             {
                 var existingDate = await _context.SpecificDates
@@ -168,14 +168,15 @@ namespace backend_lembrol.Repository
                         SpecificDate = date.Date,
                         Active = date.Active
                     };
-                    datesToUpdate.Add(dateEntity);
+                    datesToAdd.Add(dateEntity);
                 }
             }
 
-            var datesToCheck = datesToUpdate.Select(up => up.SpecificDate).ToList();
+            var datesToCheck = datesToUpdate.Concat(datesToAdd).Select(up => up.SpecificDate).ToList();
             var oldSpecificDates = await _context.SpecificDates.Where(s => s.TagId == oldTag.TagId).ToListAsync();
             var datesToRemove = oldSpecificDates.Where(od => !datesToCheck.Contains(od.SpecificDate));
             _context.SpecificDates.RemoveRange(datesToRemove);
+            _context.SpecificDates.RemoveRange(datesToAdd);
             _context.SpecificDates.UpdateRange(datesToUpdate);
 
         }
@@ -188,7 +189,7 @@ namespace backend_lembrol.Repository
         public async Task TagState(string tagId)
         {
             var tagEntity = await _context.Tags.FindAsync(tagId);
-            if (tagEntity == null) { return; }
+            if (tagEntity == null) { throw new NotFoundException($"TagId {tagId} not Found"); }
 
             var currentDate = DateTime.UtcNow.AddDays(1);
             var specificDatesEntities = await _context.SpecificDates.Where(s => s.TagId == tagId && s.SpecificDate < currentDate).ToListAsync();
@@ -223,6 +224,7 @@ namespace backend_lembrol.Repository
                 entity.Active = ManageActivate(entity.Active);
                 _context.DaysOfWeek.Update(entity);
             }
+            else { throw new NotFoundException($"TagId {tagId} not Found"); }
         }
 
         public async Task DeleteSpecificDate(string tagId, DateTime date)
@@ -232,12 +234,13 @@ namespace backend_lembrol.Repository
             {
                 _context.SpecificDates.Remove(entity);
             }
+            else { throw new NotFoundException($"TagId {tagId} not Found"); }
         }
 
         public async Task DeleteTag(string tagId)
         {
             var tagEntity = await _context.Tags.FindAsync(tagId);
-            if (tagEntity == null){return;}
+            if (tagEntity == null) { throw new NotFoundException($"TagId {tagId} not Found"); }
 
             var daysOfWeekEntities = await _context.DaysOfWeek.Where(d => d.TagId == tagId).ToListAsync();
             foreach (var dayOfWeekEntity in daysOfWeekEntities)
