@@ -114,6 +114,7 @@ namespace backend_lembrol.Repository
             _context.Tags.Update(oldTag);
 
             List<DaysOfWeek> daysToUpdate = new List<DaysOfWeek>();
+            List<DaysOfWeek> daysToAdd = new List<DaysOfWeek>();
             foreach (var day in updatedTag.DaysOfWeek)
             {
                 ValidationUtils.ValidateIntDayOfWeek(day.Day);
@@ -133,20 +134,22 @@ namespace backend_lembrol.Repository
                         DayOfWeek = day.Day,
                         Active = day.Active
                     };
-                    daysToUpdate.Add(dayEntity);
+                    daysToAdd.Add(dayEntity);
                 }
                 
             }
 
-            var daysToCheck = daysToUpdate.Select(up => up.DayOfWeek).ToList();
+            var daysToCheck = daysToUpdate.Concat(daysToAdd).Select(up => up.DayOfWeek).ToList();
             var oldDaysOfWeek = await _context.DaysOfWeek.Where(d => d.TagId == oldTag.TagId).ToListAsync();
             var daysToRemove = oldDaysOfWeek.Where(od => !daysToCheck.Contains(od.DayOfWeek));
             _context.DaysOfWeek.RemoveRange(daysToRemove);
+            _context.DaysOfWeek.AddRange(daysToAdd);
             _context.DaysOfWeek.UpdateRange(daysToUpdate);
 
             
 
             List<SpecificDates> datesToUpdate = new List<SpecificDates>();
+            List<SpecificDates> datesToAdd = new List<SpecificDates>();
             foreach (var date in updatedTag.SpecificDates)
             {
                 var existingDate = await _context.SpecificDates
@@ -165,14 +168,15 @@ namespace backend_lembrol.Repository
                         SpecificDate = date.Date,
                         Active = date.Active
                     };
-                    datesToUpdate.Add(dateEntity);
+                    datesToAdd.Add(dateEntity);
                 }
             }
 
-            var datesToCheck = datesToUpdate.Select(up => up.SpecificDate).ToList();
+            var datesToCheck = datesToUpdate.Concat(datesToAdd).Select(up => up.SpecificDate).ToList();
             var oldSpecificDates = await _context.SpecificDates.Where(s => s.TagId == oldTag.TagId).ToListAsync();
             var datesToRemove = oldSpecificDates.Where(od => !datesToCheck.Contains(od.SpecificDate));
             _context.SpecificDates.RemoveRange(datesToRemove);
+            _context.SpecificDates.RemoveRange(datesToAdd);
             _context.SpecificDates.UpdateRange(datesToUpdate);
 
         }
