@@ -253,5 +253,23 @@ namespace backend_lembrol.Repository
 
             _context.Tags.Remove(tagEntity);
         }
+
+
+        public async Task InsertEspData(string id, double latitude, double longitude)
+        {
+            var oldTag = await _context.Tags.FindAsync(id);
+
+            if (oldTag == null)
+            {
+                throw new Exception("TagId not Found");
+            }
+
+            oldTag.Latitude = latitude;
+            oldTag.Longitude = longitude;
+
+            _context.Tags.Update(oldTag);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

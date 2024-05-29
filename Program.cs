@@ -17,6 +17,8 @@ builder.Services.AddControllers();
 // Add MQTT services
 builder.Services.AddSingleton<MqttService>();
 
+// Register the factory for TagRepository
+builder.Services.AddSingleton<TagRepositoryFactory>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -28,7 +30,7 @@ builder.Services.AddDbContext<DataContext>(
 );
 
 // Add repositories and services
-builder.Services.AddScoped<TagRepository>(); // Agora registrado como Scoped
+builder.Services.AddScoped<TagRepository>();
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -48,5 +50,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseCors("AllowAll");
+
+app.Services.GetService<MqttService>();
 
 app.Run();

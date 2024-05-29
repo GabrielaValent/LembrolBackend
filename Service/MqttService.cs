@@ -3,16 +3,23 @@ using MQTTnet;
 using MQTTnet.Client;
 using System.Threading.Tasks;
 using System;
+using System.Text.Json;
+using backend_lembrol.Dto;
+using backend_lembrol.Repository;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace backend_lembrol.MQTT
 {
     public class MqttService
     {
-        private IMqttClient _mqttClient;
-        private MqttClientOptions _mqttOptions;
+        private readonly IMqttClient _mqttClient;
+        private readonly MqttClientOptions _mqttOptions;
+        private readonly TagRepositoryFactory _tagRepositoryFactory;
 
-        public MqttService()
+        public MqttService(TagRepositoryFactory tagRepositoryFactory)
         {
+            _tagRepositoryFactory = tagRepositoryFactory;
+
             var factory = new MqttFactory();
             _mqttClient = factory.CreateMqttClient();
             _mqttOptions = new MqttClientOptionsBuilder()
@@ -21,11 +28,69 @@ namespace backend_lembrol.MQTT
                 .WithCleanSession()
                 .Build();
 
-            _mqttClient.ApplicationMessageReceivedAsync += e =>
+            _mqttClient.ApplicationMessageReceivedAsync += async e =>
             {
-                var payload = e.ApplicationMessage.PayloadSegment;
-                Console.WriteLine($"Received message: {Encoding.UTF8.GetString(payload.Array, payload.Offset, payload.Count)}");
-                return Task.CompletedTask;
+                var payload = e.ApplicationMessage.Payload;
+
+                if (payload == null)
+                {
+                    Console.WriteLine("Received empty message");
+                    return;
+                }
+                
+                Console.WriteLine($"Received message: {Encoding.UTF8.GetString(payload)}");
+                
+                try
+                {
+                    var data = JsonSerializer.Deserialize<Dictionary<string, List<Dictionary<string, string>>>>(payload);
+
+                    if (data != null && data.ContainsKey("tags"))
+                    {
+                        var tags = data["tags"];
+
+                        foreach (var tag in tags)
+                        {
+                            if (tag != null && tag.ContainsKey("tagId") && tag.ContainsKey("latitude") && tag.ContainsKey("longitude"))
+                            {
+                                double.TryParse(tag["latitude"], out double latitude);
+                                double.TryParse(tag["longitude"], out double longitude);
+
+                                var messageDto = new ReceivedFromEspDto
+                                {
+                                    TagId = tag["tagId"],
+                                    Latitude = latitude,
+                                    Longitude = longitude
+                                };
+
+                                using (var scope = _tagRepositoryFactory.CreateScope())
+                                {
+                                    try
+                                    {
+                                        var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
+                                        await tagRepository.InsertEspData(messageDto.TagId, messageDto.Latitude, messageDto.Longitude);
+                                    }
+                                    catch (InvalidOperationException ex)
+                                    {
+                                        Console.WriteLine($"Error: {ex.Message}");
+                                        Console.WriteLine(ex.StackTrace);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("Received malformed message for a tag");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Received malformed message");
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"Error parsing message: {ex.Message}");
+                }
             };
 
             _mqttClient.ConnectedAsync += async e =>

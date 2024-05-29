@@ -9,7 +9,7 @@ namespace backend_lembrol.Entity
         public string Name {get;set;}
         public string Color {get;set;}
         public int Active {get;set;}
-        public double Longitude {get;set;}
-        public double Latitude {get;set;}
+        public double? Longitude {get;set;}
+        public double? Latitude {get;set;}
     }
 }
