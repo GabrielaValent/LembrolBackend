@@ -43,14 +43,14 @@ namespace backend_lembrol.Repository
                 var daysOfWeek = await _context.DaysOfWeek.Where(d => d.TagId == tag.TagId).ToListAsync();
                 var specificDates = await _context.SpecificDates.Where(s => s.TagId == tag.TagId).ToListAsync();
 
-                var daysOfWeekDto = daysOfWeek.Select(d => new DaysOfWeekDto
+                var daysOfWeekDto = daysOfWeek.Select(d => new DaysOfWeekUpdateDto
                 {
                     Day = d.DayOfWeek,
                     Active = d.Active
                     
                 }).ToList();
 
-                var specificDatesDto = specificDates.Select(s => new SpecificDatesDto
+                var specificDatesDto = specificDates.Select(s => new SpecificDatesUpdateDto
                 {
                     Date = s.SpecificDate,
                     Active = s.Active
@@ -79,13 +79,13 @@ namespace backend_lembrol.Repository
             var daysOfWeek = await _context.DaysOfWeek.Where(d => d.TagId == tag.TagId).ToListAsync();
             var specificDates = await _context.SpecificDates.Where(s => s.TagId == tag.TagId).ToListAsync();
 
-            var daysOfWeekDto = daysOfWeek.Select(d => new DaysOfWeekDto
+            var daysOfWeekDto = daysOfWeek.Select(d => new DaysOfWeekUpdateDto
             {
                 Day = d.DayOfWeek,
                 Active = d.Active
             }).ToList();
 
-            var specificDatesDto = specificDates.Select(s => new SpecificDatesDto
+            var specificDatesDto = specificDates.Select(s => new SpecificDatesUpdateDto
             {
                 Date = s.SpecificDate,
                 Active = s.Active
@@ -256,5 +256,32 @@ namespace backend_lembrol.Repository
 
             _context.Tags.Remove(tagEntity);
         }
+
+
+        public async Task InsertEspData(string id, double latitude, double longitude)
+        {
+            var oldTag = await _context.Tags.FindAsync(id);
+
+            if (oldTag == null)
+            {
+                throw new NotFoundException($"TagId {id} not Found");
+            }
+
+            oldTag.Lat = latitude;
+            oldTag.Lng = longitude;
+
+            _context.Tags.Update(oldTag);
+            await _context.SaveChangesAsync();
+        }
+
+        public IEnumerable<Tag> GetTagsByDate(DateTime date)
+        {
+            return _context.Tags
+                .Where(tag => _context.SpecificDates.Any(sd => sd.SpecificDate.Date == date.Date && sd.TagId == tag.TagId && sd.Active == 1)
+                              || _context.DaysOfWeek.Any(dow => dow.DayOfWeek == (int)date.DayOfWeek && dow.TagId == tag.TagId && dow.Active == 1))
+                .Select(tag => new Tag { TagId = tag.TagId, Name = tag.Name })
+                .ToList();
+        }
+
     }
 }

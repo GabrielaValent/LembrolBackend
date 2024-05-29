@@ -4,12 +4,21 @@ using backend_lembrol.Repository;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.DataAccess;
 using backend_lembrol.DataAccess.Interfaces;
-
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using backend_lembrol.MQTT;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Add MQTT services
+builder.Services.AddSingleton<MqttService>();
+
+// Register the factory for TagRepository
+builder.Services.AddSingleton<TagRepositoryFactory>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -51,5 +60,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseCors("AllowAll");
+
+app.Services.GetService<MqttService>();
 
 app.Run();
