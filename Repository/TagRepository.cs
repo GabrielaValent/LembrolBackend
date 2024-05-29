@@ -271,5 +271,14 @@ namespace backend_lembrol.Repository
             await _context.SaveChangesAsync();
         }
 
+        public IEnumerable<Tag> GetTagsByDate(DateTime date)
+        {
+            return _context.Tags
+                .Where(tag => _context.SpecificDates.Any(sd => sd.SpecificDate.Date == date.Date && sd.TagId == tag.TagId && sd.Active == 1)
+                              || _context.DaysOfWeek.Any(dow => dow.DayOfWeek == (int)date.DayOfWeek && dow.TagId == tag.TagId && dow.Active == 1))
+                .Select(tag => new Tag { TagId = tag.TagId, Name = tag.Name })
+                .ToList();
+        }
+
     }
 }

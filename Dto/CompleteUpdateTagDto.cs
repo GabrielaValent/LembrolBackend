@@ -5,8 +5,8 @@ public class CompleteUpdateTagDto
     public string Name { get; set; }
     public string Color { get; set; }
     public int Active { get; set; }
-    public List<DaysOfWeekUpdateDto> DaysOfWeek { get; set; }
-    public List<SpecificDatesUpdateDto> SpecificDates { get; set; }
+    public List<DaysOfWeekUpdateDto>? DaysOfWeek { get; set; }
+    public List<SpecificDatesUpdateDto>? SpecificDates { get; set; }
 }
 
 public class DaysOfWeekUpdateDto

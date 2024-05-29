@@ -98,5 +98,10 @@ namespace backend_lembrol.Service
             await _tagRepository.DeleteSpecificDate(id, date);
             await _unitOfWork.SaveAsync();
         }
+
+        public IEnumerable<Tag> GetTagsByDate(DateTime date)
+         {
+            return _tagRepository.GetTagsByDate(date);
+        }
     }
 }

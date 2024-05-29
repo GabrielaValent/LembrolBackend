@@ -74,6 +74,14 @@ namespace backend_lembrol.Controllers
             await _tagService.DeleteSpecificDate(id, date);
             return Ok("Specific Date Deleted");
         }
+
+        [HttpGet("tags_of_the_day")]
+        public IActionResult GetTagsByDate()
+        {
+            var currentDate = DateTime.Now;
+            var tags = _tagService.GetTagsByDate(currentDate);
+            return Ok(tags);
+        }
         
     }
 }
