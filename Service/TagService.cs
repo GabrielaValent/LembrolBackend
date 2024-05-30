@@ -99,7 +99,7 @@ namespace backend_lembrol.Service
             await _unitOfWork.SaveAsync();
         }
 
-        public IEnumerable<Tag> GetTagsByDate(DateTime date)
+        public IEnumerable<TagOfDayDto> GetTagsByDate(DateTime date)
          {
             return _tagRepository.GetTagsByDate(date);
         }
