@@ -176,7 +176,7 @@ namespace backend_lembrol.Repository
             var oldSpecificDates = await _context.SpecificDates.Where(s => s.TagId == oldTag.TagId).ToListAsync();
             var datesToRemove = oldSpecificDates.Where(od => !datesToCheck.Contains(od.SpecificDate));
             _context.SpecificDates.RemoveRange(datesToRemove);
-            _context.SpecificDates.RemoveRange(datesToAdd);
+            _context.SpecificDates.AddRange(datesToAdd);
             _context.SpecificDates.UpdateRange(datesToUpdate);
 
         }
@@ -274,12 +274,12 @@ namespace backend_lembrol.Repository
             await _context.SaveChangesAsync();
         }
 
-        public IEnumerable<Tag> GetTagsByDate(DateTime date)
+        public IEnumerable<TagOfDayDto> GetTagsByDate(DateTime date)
         {
             return _context.Tags
                 .Where(tag => _context.SpecificDates.Any(sd => sd.SpecificDate.Date == date.Date && sd.TagId == tag.TagId && sd.Active == 1)
                               || _context.DaysOfWeek.Any(dow => dow.DayOfWeek == (int)date.DayOfWeek && dow.TagId == tag.TagId && dow.Active == 1))
-                .Select(tag => new Tag { TagId = tag.TagId, Name = tag.Name })
+                .Select(tag => new TagOfDayDto { TagId = tag.TagId, Name = tag.Name, Color = tag.Color })
                 .ToList();
         }
 

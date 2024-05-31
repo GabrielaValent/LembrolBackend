@@ -179,11 +179,21 @@ namespace backend_lembrol.Controllers
         }
 
         [HttpGet("tags_of_the_day")]
+        [ProducesResponseType(typeof(IEnumerable<TagOfDayDto>),StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult GetTagsByDate()
         {
-            var currentDate = DateTime.Now;
-            var tags = _tagService.GetTagsByDate(currentDate);
-            return Ok(tags);
+            try
+            {
+                var utcNow = DateTime.UtcNow;
+                var utcDate = new DateTime(utcNow.Year, utcNow.Month, utcNow.Day, 0, 0, 0, DateTimeKind.Utc);
+                var tags = _tagService.GetTagsByDate(utcDate);
+                return Ok(tags);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
         
     }
