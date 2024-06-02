@@ -3,7 +3,7 @@
 
 ```bash
   dotnet ef migrations add InitialCreate
-  ef database update
+  dotnet ef database update
   dotnet build
   dotnet run
 ```
