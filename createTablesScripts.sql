@@ -3,6 +3,8 @@ CREATE TABLE Tags (
     Color INTEGER,
     Name TEXT,
     Activate INTEGER,
+    Lat REAL,
+    Lng REAL,
     PRIMARY KEY (TagId)
 );
 
