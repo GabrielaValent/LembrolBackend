@@ -1,12 +1,10 @@
 using System.Text;
 using MQTTnet;
 using MQTTnet.Client;
-using System.Threading.Tasks;
-using System;
 using System.Text.Json;
 using backend_lembrol.Dto;
 using backend_lembrol.Repository;
-using Microsoft.Extensions.DependencyInjection;
+using System.Globalization;
 
 namespace backend_lembrol.MQTT
 {
@@ -50,16 +48,16 @@ namespace backend_lembrol.MQTT
 
                         foreach (var tag in tags)
                         {
-                            if (tag != null && tag.ContainsKey("tagId") && tag.ContainsKey("latitude") && tag.ContainsKey("longitude"))
+                            if (tag != null && tag.ContainsKey("tagId") && tag.ContainsKey("lat") && tag.ContainsKey("lng"))
                             {
-                                double.TryParse(tag["latitude"], out double latitude);
-                                double.TryParse(tag["longitude"], out double longitude);
+                                double.TryParse(tag["lat"], CultureInfo.InvariantCulture,out double latitude);
+                                double.TryParse(tag["lng"], CultureInfo.InvariantCulture, out double longitude);
 
                                 var messageDto = new ReceivedFromEspDto
                                 {
                                     TagId = tag["tagId"],
-                                    Latitude = latitude,
-                                    Longitude = longitude
+                                    Lat = latitude,
+                                    Lng = longitude
                                 };
 
                                 using (var scope = _tagRepositoryFactory.CreateScope())
@@ -67,7 +65,7 @@ namespace backend_lembrol.MQTT
                                     try
                                     {
                                         var tagRepository = scope.ServiceProvider.GetRequiredService<TagRepository>();
-                                        await tagRepository.InsertEspData(messageDto.TagId, messageDto.Latitude, messageDto.Longitude);
+                                        await tagRepository.InsertEspData(messageDto.TagId, messageDto.Lat, messageDto.Lng);
                                     }
                                     catch (InvalidOperationException ex)
                                     {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using backend_lembrol.MQTT;
-using System.Threading.Tasks;
+using backend_lembrol.Dto;
 
 namespace backend_lembrol.Controllers
 {
@@ -16,16 +16,19 @@ namespace backend_lembrol.Controllers
         }
 
         [HttpPost("publish")]
-        public async Task<IActionResult> PublishMessage([FromBody] MqttMessageRequest request)
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PublishMessage([FromBody] MqttMessageDto request)
         {
-            await _mqttService.PublishMessageAsync(request.Topic, request.Payload);
-            return Ok("Message published");
+            try
+            {
+                await _mqttService.PublishMessageAsync(request.Topic, request.Payload);
+                return Ok("Message published");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
-    }
-
-    public class MqttMessageRequest
-    {
-        public string Topic { get; set; }
-        public string Payload { get; set; }
     }
 }
