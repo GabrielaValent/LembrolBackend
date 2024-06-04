@@ -5,6 +5,8 @@ public class CompleteUpdateTagDto
     public string Name { get; set; }
     public string Color { get; set; } = "#FFFFFF";
     public int Active { get; set; }
+    public double Lat {  get; set; }
+    public double Lng { get; set; }
     public List<DaysOfWeekUpdateDto> DaysOfWeek { get; set; }
     public List<SpecificDatesUpdateDto> SpecificDates { get; set; }
 }
