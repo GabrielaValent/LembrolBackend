@@ -10,8 +10,8 @@
 
 ## How to run docker
 ```bash
-  docker build -t <IMAGE_NAME> .
-  docker run -e ALLOWED_CORS=<FRONTEND_URL> -p 80:8080 -p 443:8080 <IMAGE_NAME>
+  docker build --build-arg CERT_PASSWORD=<CERTIFICATE_PASSWORD> -t lembrol-app-v1 .
+  docker run -d --name lembrol -p 8443:443 -p 8080:80  -e ASPNETCORE_URLS="https://+;http://+" -e ASPNETCORE_HTTPS_PORT=8443 -e ASPNETCORE_Kestrel__Certificates__Default__Password=<CERTIFICATE_PASSWORD> -e ASPNETCORE_Kestrel__Certificates__Default__Path=/app/certificates/aspnetapp.pfx -e ALLOWED_CORS=<FRONTEND_URL> <IMAGE_NAME> 
 ```
 
 ## Commits and Branches guidelines
