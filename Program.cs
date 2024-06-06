@@ -4,9 +4,6 @@ using backend_lembrol.Repository;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.DataAccess;
 using backend_lembrol.DataAccess.Interfaces;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using backend_lembrol.MQTT;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,24 +31,25 @@ builder.Services.AddScoped<TagRepository>();
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddCors(options =>
+var allowedCors = builder.Configuration["ALLOWED_CORS"];
+
+if (!string.IsNullOrEmpty(allowedCors))
 {
-    options.AddPolicy("AllowAll", builder =>
+    builder.Services.AddCors(options =>
     {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
+        options.AddPolicy("AllowSpecific", policyBuilder =>
+        {
+            policyBuilder.WithOrigins(allowedCors)
+                         .AllowAnyMethod()
+                         .AllowAnyHeader();
+        });
     });
-});
+}
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
@@ -59,7 +57,14 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.UseCors("AllowAll");
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+}
+else
+{
+    app.UseCors("AllowSpecific");
+}
 
 app.Services.GetService<MqttService>();
 
