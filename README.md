@@ -1,11 +1,17 @@
 # Lembrol 2.0 Backend
-## How to run
+## How to run dev
 
 ```bash
   dotnet ef migrations add InitialCreate
   dotnet ef database update
   dotnet build
   dotnet run
+```
+
+## How to run docker
+```bash
+  docker build -t <IMAGE_NAME> .
+  docker run -e ALLOWED_CORS=<FRONTEND_URL> -p 80:8080 -p 443:8080 <IMAGE_NAME>
 ```
 
 ## Commits and Branches guidelines
