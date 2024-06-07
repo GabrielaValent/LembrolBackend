@@ -61,7 +61,8 @@ namespace backend_lembrol.Service
         }
         public async Task UpdateTag(string id, CompleteUpdateTagDto dto)
         {
-            _tagRepository.UpdateTag(id,dto);
+            string decodedId = HttpUtility.UrlDecode(id);
+            _tagRepository.UpdateTag(decodedId, dto);
             await _unitOfWork.SaveAsync();
         }
 
