@@ -3,6 +3,7 @@ using backend_lembrol.Dto;
 using backend_lembrol.Repository;
 using backend_lembrol.DataAccess.Interfaces;
 using backend_lembrol.Utils;
+using System.Web;
 
 namespace backend_lembrol.Service
 {
@@ -71,7 +72,8 @@ namespace backend_lembrol.Service
 
         public async Task<CompleteTagDto> GetTagById(string id)
         {
-            return await _tagRepository.GetTagById(id);
+            string decodedId = HttpUtility.UrlDecode(id);
+            return await _tagRepository.GetTagById(decodedId);
         }
 
         public async Task TagState(string id)
